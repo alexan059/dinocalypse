@@ -1,5 +1,7 @@
+import Constants from "./modules/Constants.js";
 import imageLoader from "./modules/imageLoader.js";
 import input from "./modules/Input.js";
+import GameSubject from './modules/GameSubject.js';
 
 const canvas = document.getElementById('myCanvas');
 const ctx = canvas.getContext('2d');
@@ -18,7 +20,9 @@ const assets = {
   jungle_tiles: './assets/jungle_spritemap.png',
   bg1: './assets/bg_layer_1.png',
   bg2: './assets/bg_layer_2.png',
-  bg3: './assets/bg_layer_3.png'
+  bg3: './assets/bg_layer_3.png',
+  dino_R: './assets/dino_sprite_R.png',
+  dino_L: './assets/dino_sprite_L.png'
 }
 let sprites;
 
@@ -26,66 +30,24 @@ let sprites;
 
 let snail;
 
-class Snail {
+class Dino extends GameSubject {
+
   constructor(sprites, ctx, x = 0, y = 0, dir = 'right') {
-    this._sprites = sprites;
+    super(sprites, ctx, x, y, dir);
+    this.SPRITE_SIZE = 24;
+    this.SPRITE_SCALE = 3;
+  }
 
-    this._ctx = ctx; // context of canvas
+}
 
-    this._dir = dir;
-    this._x = x;
-    this._y = y;
+class Snail extends GameSubject {
 
-    this.VELOCITY = 2;
-    this.JUMP_SLOWITY = 30;
-    this.JUMP_MAX_HEIGHT = 50;
+  constructor(sprites, ctx, x = 0, y = 0, dir = 'right') {
+    super(sprites, ctx, x, y, dir);
     this.SPRITE_SIZE = 64;
-
-    this._jumping = false;
-    this._jumpY = 0;
-    this._jumpProgress = 0;
-    this._JumpVelocity = Math.PI / this.JUMP_SLOWITY;
+    this.SPRITE_SCALE = 1;
   }
 
-  move(dir) {
-    if (dir === 'right') {
-      this._dir = 'right';
-      this._x += this.VELOCITY;
-    } else {
-      this._dir = 'left';
-      this._x -= this.VELOCITY;
-    }
-  }
-
-  isJumping() {
-    return this._jumping;
-  }
-
-  jump() {
-    if (this.isJumping()) { // is already jumping then calculate
-      this._jumpY = Math.abs(Math.sin(this._jumpProgress)) * this.JUMP_MAX_HEIGHT;
-      this._jumpProgress += this._JumpVelocity;
-
-      if (this._jumpProgress >= Math.PI) { // jumping is done
-        this._jumpY = 0;
-        this._jumpProgress = 0;
-        this._jumping = false;
-      }
-    } else { // when we first jump
-      this._jumping = true;
-    }
-  }
-
-  draw() {
-    // the third parameter for y is calculting the bottom 
-    // position relative to the start (top) of the canves
-    // therefore we can use the y coordinate normally
-    this._ctx.drawImage(this._getSnailImage(), this._x, CANVAS_HEIGHT - this.SPRITE_SIZE - this._y - this._jumpY);
-  }
-
-  _getSnailImage() {
-    return this._dir === 'right' ? this._sprites.snail_R : this._sprites.snail_L;
-  }
 }
 
 // 3. Environment
@@ -126,8 +88,9 @@ class JungleBackground {
 
 // 4. Game Loop
 
-// TODO refactor snail
-// TODO make y friendly for calculation
+// TODO use dino sprite
+// TODO make animated sprite
+// TODO make animation states
 // TODO add moving background and obstacles
 // TODO collision detection
 
@@ -146,7 +109,8 @@ class JungleBackground {
 
 function setupGame() {
 
-  snail = new Snail(sprites, ctx, 0, 45);
+  snail = new Dino({ left: sprites.dino_L, right: sprites.dino_R }, ctx, 0, 45);
+  // snail = new Snail({ left: sprites.snail_L, right: sprites.snail_R }, ctx, 0, 45)
   jungle = new JungleBackground(sprites, ctx);
 
 }
