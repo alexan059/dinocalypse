@@ -1,4 +1,4 @@
-import Constants from "./modules/Constants.js";
+import Constants, {CHARACTER_STATE} from "./modules/Constants.js";
 import imageLoader from "./modules/imageLoader.js";
 import input from "./modules/Input.js";
 import GameSubject from './modules/GameSubject.js';
@@ -28,7 +28,7 @@ let sprites;
 
 // 2. Game Objects
 
-let snail;
+let dino;
 
 class Dino extends GameSubject {
 
@@ -36,6 +36,10 @@ class Dino extends GameSubject {
     super(sprites, ctx, x, y, dir);
     this.SPRITE_SIZE = 24;
     this.SPRITE_SCALE = 3;
+
+    this.addAnimation(CHARACTER_STATE.IDLE, 0, 3);
+    this.addAnimation(CHARACTER_STATE.MOVING, 3, 5);
+    this.addAnimation(CHARACTER_STATE.JUMPING, 12, 0);
   }
 
 }
@@ -88,9 +92,9 @@ class JungleBackground {
 
 // 4. Game Loop
 
-// TODO use dino sprite
-// TODO make animated sprite
-// TODO make animation states
+// DONE TODO use dino sprite
+// DONE TODO make animated sprite
+// DONE TODO make animation states
 // TODO add moving background and obstacles
 // TODO collision detection
 
@@ -109,7 +113,7 @@ class JungleBackground {
 
 function setupGame() {
 
-  snail = new Dino({ left: sprites.dino_L, right: sprites.dino_R }, ctx, 0, 45);
+  dino = new Dino({ left: sprites.dino_L, right: sprites.dino_R }, ctx, 0, 45);
   // snail = new Snail({ left: sprites.snail_L, right: sprites.snail_R }, ctx, 0, 45)
   jungle = new JungleBackground(sprites, ctx);
 
@@ -121,25 +125,27 @@ function runGame() {
 
   // game calculation
   if (input.isPressed('right')) {
-    snail.move('right');
+    dino.move('right');
+    dino.setState(CHARACTER_STATE.MOVING);
   } else if (input.isPressed('left')) {
-    snail.move('left');
+    dino.move('left');
+    dino.setState(CHARACTER_STATE.MOVING);
+  } else {
+    // reset character state
+    dino.setState(CHARACTER_STATE.IDLE);
   }
 
-  if (snail.isJumping()) {
-    snail.jump();
-  } else if (input.isPressed('jump')) {
-    snail.jump();
+  if (dino.isJumping()) { // already jumping
+    dino.jump();
+    dino.setState(CHARACTER_STATE.JUMPING);
+  } else if (input.isPressed('jump')) { // jump starts here
+    dino.jump();
   }
 
   // drawing part  
   jungle.draw();
-  snail.draw();
+  dino.draw();
 
-  // next game frame
+  // next game frame (recursive)
   requestAnimationFrame(runGame);
 }
-
-
-
-
