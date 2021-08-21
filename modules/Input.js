@@ -22,6 +22,10 @@ class Input {
       case 'ArrowUp':
         this._keypressed.push('jump');
         break;
+      case 'ShiftLeft':
+      case 'ShiftRight':
+        this._keypressed.push('run');
+        break
     }
   }
 
@@ -35,6 +39,10 @@ class Input {
         break;
       case 'ArrowUp':
         this._keypressed = this._keypressed.filter(k => k !== 'jump');
+        break;
+      case 'ShiftLeft':
+      case 'ShiftRight':
+        this._keypressed = this._keypressed.filter(k => k !== 'run');
         break;
     }
   }

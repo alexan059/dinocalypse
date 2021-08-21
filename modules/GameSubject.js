@@ -72,6 +72,10 @@ class GameSubject {
     }
   }
 
+  getDirection() {
+    return this._dir;
+  }
+
   isJumping() {
     return this._jumping;
   }

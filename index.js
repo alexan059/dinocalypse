@@ -1,4 +1,4 @@
-import Constants, {CHARACTER_STATE} from "./modules/Constants.js";
+import Constants, { CHARACTER_STATE } from "./modules/Constants.js";
 import imageLoader from "./modules/imageLoader.js";
 import input from "./modules/Input.js";
 import GameSubject from './modules/GameSubject.js';
@@ -37,10 +37,18 @@ class Dino extends GameSubject {
     this.SPRITE_SIZE = 24;
     this.SPRITE_SCALE = 3;
 
+    this.JUMP_MAX_HEIGHT = 70;
+
     this.addAnimation(CHARACTER_STATE.IDLE, 0, 3);
     this.addAnimation(CHARACTER_STATE.MOVING, 3, 5);
     this.addAnimation(CHARACTER_STATE.JUMPING, 12, 0);
+    this.addAnimation(CHARACTER_STATE.RUNNING, 17, 5);
   }
+
+  isMoving() {
+    return this._state === CHARACTER_STATE.MOVING;
+  }
+
 
 }
 
@@ -95,8 +103,12 @@ class JungleBackground {
 // DONE TODO use dino sprite
 // DONE TODO make animated sprite
 // DONE TODO make animation states
-// TODO add moving background and obstacles
+// TODO add moving background
+// TODO add obstacles
 // TODO collision detection
+// TODO add score
+// TODO add start screen
+// TODO add game over screen
 
 (async () => {
 
@@ -133,6 +145,11 @@ function runGame() {
   } else {
     // reset character state
     dino.setState(CHARACTER_STATE.IDLE);
+  }
+
+  if (input.isPressed('run') && dino.isMoving()) {
+    dino.move(dino.getDirection()); // twice as fast, because we are calling move twice before dino.draw()
+    dino.setState(CHARACTER_STATE.RUNNING);
   }
 
   if (dino.isJumping()) { // already jumping
