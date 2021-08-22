@@ -15,8 +15,6 @@ const CANVAS_HEIGHT = canvas.height;
 
 // 1. Sprites
 const assets = {
-  snail_R: './assets/snail_R.png',
-  snail_L: './assets/snail_L.png',
   jungle_tiles: './assets/jungle_spritemap.png',
   bg1: './assets/bg_layer_1.png',
   bg2: './assets/bg_layer_2.png',
@@ -52,16 +50,6 @@ class Dino extends GameSubject {
 
 }
 
-class Snail extends GameSubject {
-
-  constructor(sprites, ctx, x = 0, y = 0, dir = 'right') {
-    super(sprites, ctx, x, y, dir);
-    this.SPRITE_SIZE = 64;
-    this.SPRITE_SCALE = 1;
-  }
-
-}
-
 // 3. Environment
 
 let jungle;
@@ -75,6 +63,14 @@ class JungleBackground {
     this._dir = dir;
     this._x = x;
     this._y = y;
+
+    this._bg2Width = 384 * 2.5;
+    this._bg2Height = 216 * 2.5;
+    this._bg2X = 0;
+
+    this._bg3Width = 384 * 2.5;
+    this._bg3Height = 216 * 2.5;
+    this._bg3X = 0;
 
     this.VELOCITY = 2;
     this.SPRITE_SIZE = 16;
@@ -100,9 +96,13 @@ class JungleBackground {
     if (dir === 'right') {
       this._dir = 'right';
       this._x += this.VELOCITY;
+      this._bg2X += this.VELOCITY * 0.5;
+      this._bg3X += this.VELOCITY * 0.75;
     } else {
       this._dir = 'left';
       this._x -= this.VELOCITY;
+      this._bg2X -= this.VELOCITY * 0.5;
+      this._bg3X -= this.VELOCITY * 0.75;
     }
   }
 
@@ -120,6 +120,20 @@ class JungleBackground {
       const tempSoil = this._soilMap.pop();
       this._soilMap.unshift(tempSoil);
       this._x = 0;
+    }
+
+    console.log(this._bg3X)
+
+    if (this._bg3X <= -this._bg3Width) {
+      this._bg3X = 0;
+    } else if (this._bg3X > 0) {
+      this._bg3X = -this._bg3Width;
+    }
+
+    if (this._bg2X <= -this._bg2Width) {
+      this._bg2X = 0;
+    } else if (this._bg2X > 0) {
+      this._bg2X = -this._bg2Width;
     }
   }
 
@@ -148,9 +162,14 @@ class JungleBackground {
   }
 
   _drawBackground() {
+    // background sky
     this._ctx.drawImage(this._sprites.bg1, 0, 0, 384 * 2.5, 216 * 2.5);
-    // this._ctx.drawImage(this._sprites.bg2, 0, 0, 384 * 2.5, 216 * 2.5);
-    // this._ctx.drawImage(this._sprites.bg3, 0, 0, 384 * 2.5, 216 * 2.5);
+    // background far
+    this._ctx.drawImage(this._sprites.bg2, this._bg2X, 0, this._bg2Width, this._bg2Height);
+    this._ctx.drawImage(this._sprites.bg2, this._bg2X + this._bg2Width, 0, this._bg2Width, this._bg2Height);
+    // background close
+    this._ctx.drawImage(this._sprites.bg3, this._bg3X, 0, this._bg3Width, this._bg3Height);
+    this._ctx.drawImage(this._sprites.bg3, this._bg3X + this._bg3Width, 0, this._bg3Width, this._bg3Height);
   }
 
   draw() {
@@ -163,10 +182,11 @@ class JungleBackground {
 
 // 4. Game Loop
 
-// DONE TODO use dino sprite
-// DONE TODO make animated sprite
-// DONE TODO make animation states
-// TODO add moving background
+// DONE use dino sprite
+// DONE make animated sprite
+// DONE make animation states
+// DONE add moving background
+// TODO refactor movement/backgrounds
 // TODO add obstacles
 // TODO collision detection
 // TODO add score
