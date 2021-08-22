@@ -62,6 +62,14 @@ class GameSubject {
     this._state = state;
   }
 
+  turn(dir) {
+    if (dir === 'right') {
+      this._dir = 'right';
+    } else {
+      this._dir = 'left';
+    }
+  }
+
   move(dir) {
     if (dir === 'right') {
       this._dir = 'right';

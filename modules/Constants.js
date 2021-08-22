@@ -1,6 +1,6 @@
 class Constants {
-  static CANVAS_WIDTH = 500;
-  static CANVAS_HEIGHT = 500;
+  static CANVAS_WIDTH = 640;
+  static CANVAS_HEIGHT = 480;
 }
 
 // like c enum

@@ -68,26 +68,89 @@ let jungle;
 
 class JungleBackground {
 
-  constructor(sprites, ctx) {
+  constructor(sprites, ctx, x = 0, y = 0, dir = 'right') {
     this._sprites = sprites;
     this._ctx = ctx;
 
+    this._dir = dir;
+    this._x = x;
+    this._y = y;
+
+    this.VELOCITY = 2;
     this.SPRITE_SIZE = 16;
+    this.SPRITE_SCALE = 2;
+
+    this._soilLength = Constants.CANVAS_WIDTH / (this.SPRITE_SIZE * this.SPRITE_SCALE); // 640 / (16 * 2) = 20
+    this._soilMap = [
+      // 20 pieces fits inside screen beacuse 640 width divided by 32 (16 * 2 scale) = 20
+      // viewable part
+      [6, 2], [6, 2], [6, 2], [6, 2], [6, 2],
+      [6, 2], [1, 14], [2, 14], [3, 14], [3, 14],
+      [4, 14], [5, 14], [6, 14], [7, 14], [8, 14],
+      [6, 2], [6, 2], [9, 14], [6, 2], [6, 2],
+      // outside view
+      [6, 2], [6, 2], [2, 14], [6, 2], [6, 2],
+      [6, 2], [6, 2], [3, 14], [4, 14], [5, 14],
+      [6, 14], [7, 14], [7, 14], [8, 14], [6, 2],
+      [6, 2], [2, 14], [3, 14], [2, 14], [3, 14]
+    ];
+  }
+
+  move(dir) {
+    if (dir === 'right') {
+      this._dir = 'right';
+      this._x += this.VELOCITY;
+    } else {
+      this._dir = 'left';
+      this._x -= this.VELOCITY;
+    }
+  }
+
+  getDirection() {
+    return this._dir;
+  }
+
+  update() {
+    // check if soil is inside camera/canvas
+    if (this._x <= -this.SPRITE_SIZE * this.SPRITE_SCALE) {
+      const tempSoil = this._soilMap.shift();
+      this._soilMap.push(tempSoil);
+      this._x = 0;
+    } else if (this._x >= this.SPRITE_SIZE * this.SPRITE_SCALE) {
+      const tempSoil = this._soilMap.pop();
+      this._soilMap.unshift(tempSoil);
+      this._x = 0;
+    }
   }
 
   _s(size, scale = 1) {
     return this.SPRITE_SIZE * size * scale;
   }
 
+
+
   _drawSoil() {
-    this._ctx.drawImage(this._sprites.jungle_tiles, this._s(1), this._s(14), this._s(10), this._s(2), 0, CANVAS_HEIGHT - this._s(2, 2), this._s(10, 2), this._s(2, 2));
-    this._ctx.drawImage(this._sprites.jungle_tiles, this._s(1), this._s(14), this._s(10), this._s(2), this._s(10, 2), CANVAS_HEIGHT - this._s(2, 2), this._s(10, 2), this._s(2, 2));
+    this._soilMap.forEach(([x, y], index) => {
+      if (index < this._soilLength + 2) {
+        this._ctx.drawImage(
+          // tiles sprite image
+          this._sprites.jungle_tiles,
+          // sX, sY, sWidth, sHeight
+          this._s(x), this._s(y), this._s(1), this._s(2),
+          // dX, dY, dWidth, dHeight
+          this._x + this.SPRITE_SIZE * (index -1) * this.SPRITE_SCALE,
+          CANVAS_HEIGHT - this._s(2, this.SPRITE_SCALE),
+          this._s(1, this.SPRITE_SCALE),
+          this._s(2, this.SPRITE_SCALE)
+        );
+      }
+    });
   }
 
   _drawBackground() {
     this._ctx.drawImage(this._sprites.bg1, 0, 0, 384 * 2.5, 216 * 2.5);
-    this._ctx.drawImage(this._sprites.bg2, 0, 0, 384 * 2.5, 216 * 2.5);
-    this._ctx.drawImage(this._sprites.bg3, 0, 0, 384 * 2.5, 216 * 2.5);
+    // this._ctx.drawImage(this._sprites.bg2, 0, 0, 384 * 2.5, 216 * 2.5);
+    // this._ctx.drawImage(this._sprites.bg3, 0, 0, 384 * 2.5, 216 * 2.5);
   }
 
   draw() {
@@ -114,8 +177,6 @@ class JungleBackground {
 
   sprites = await imageLoader(assets);
 
-  console.log(sprites);
-
   setupGame();
 
   runGame();
@@ -125,7 +186,7 @@ class JungleBackground {
 
 function setupGame() {
 
-  dino = new Dino({ left: sprites.dino_L, right: sprites.dino_R }, ctx, 0, 45);
+  dino = new Dino({ left: sprites.dino_L, right: sprites.dino_R }, ctx, Constants.CANVAS_WIDTH / 2 - (24 * 3) / 2, 45);
   // snail = new Snail({ left: sprites.snail_L, right: sprites.snail_R }, ctx, 0, 45)
   jungle = new JungleBackground(sprites, ctx);
 
@@ -137,10 +198,14 @@ function runGame() {
 
   // game calculation
   if (input.isPressed('right')) {
-    dino.move('right');
+    // dino.move('right');
+    jungle.move('left');
+    dino.turn('right');
     dino.setState(CHARACTER_STATE.MOVING);
   } else if (input.isPressed('left')) {
-    dino.move('left');
+    // dino.move('left');
+    jungle.move('right');
+    dino.turn('left');
     dino.setState(CHARACTER_STATE.MOVING);
   } else {
     // reset character state
@@ -148,7 +213,8 @@ function runGame() {
   }
 
   if (input.isPressed('run') && dino.isMoving()) {
-    dino.move(dino.getDirection()); // twice as fast, because we are calling move twice before dino.draw()
+    // dino.move(dino.getDirection()); // twice as fast, because we are calling move twice before dino.draw()
+    jungle.move(jungle.getDirection());
     dino.setState(CHARACTER_STATE.RUNNING);
   }
 
@@ -158,6 +224,9 @@ function runGame() {
   } else if (input.isPressed('jump')) { // jump starts here
     dino.jump();
   }
+
+  // update events
+  jungle.update();
 
   // drawing part  
   jungle.draw();
