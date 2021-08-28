@@ -20,7 +20,8 @@ const assets = {
   bg2: './assets/bg_layer_2.png',
   bg3: './assets/bg_layer_3.png',
   dino_R: './assets/dino_sprite_R.png',
-  dino_L: './assets/dino_sprite_L.png'
+  dino_L: './assets/dino_sprite_L.png',
+  meteor: './assets/Asteroids.png'
 }
 let sprites;
 
@@ -46,8 +47,73 @@ class Dino extends GameSubject {
   isMoving() {
     return this._state === CHARACTER_STATE.MOVING;
   }
+}
 
+let meteor;
+class Meteor {
+  constructor(sprites, ctx, x = 0, y = 0, dir = 'right') {
+    this._sprites = sprites;
+    this._ctx = ctx;
 
+    this._x = x;
+    this._y = y;
+    this._velocity = 2;
+    this._dir = dir;
+
+    this.VELOCITY = 2;
+    
+    this.SPRITE_SIZE = 48;
+    this.SPRITE_SCALE = 2;
+
+    this.ACCELERATION = 0.5;
+  }
+
+  update() {
+    if (this._y < Constants.CANVAS_HEIGHT - this.SPRITE_SIZE * this.SPRITE_SCALE - 15) {
+      this._velocity += this.ACCELERATION
+      this._x += this._velocity * 0.5;
+      this._y += this._velocity;
+    }
+  }
+
+  move(dir) {
+    if (dir === 'right') {
+      this._dir = 'right';
+      this._x += this.VELOCITY;
+    } else {
+      this._dir = 'left';
+      this._x -= this.VELOCITY;
+    }
+  }
+
+  isDestroyed() {
+    console.log(this._x)
+    return this._x < - this.SPRITE_SIZE * this.SPRITE_SCALE;
+  }
+
+  getDirection() {
+    return this._dir;
+  }
+
+  draw() {
+    // the third parameter for y is calculting the bottom 
+    // position relative to the start (top) of the canves
+    // therefore we can use the y coordinate normally
+    // void ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+    // see: https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage
+    this._ctx.drawImage(
+      // Current sprite image
+      this._sprites,
+      // Sprite cutout/frame position in sprite
+      32, 0, this.SPRITE_SIZE, this.SPRITE_SIZE,
+      // Sprite x position on the canvas
+      this._x,
+      // Sprite y position on the canvas
+      this._y,
+      // Sprite size + scale
+      this.SPRITE_SCALE * this.SPRITE_SIZE,
+      this.SPRITE_SCALE * this.SPRITE_SIZE);
+  }
 }
 
 // 3. Environment
@@ -122,8 +188,6 @@ class JungleBackground {
       this._x = 0;
     }
 
-    console.log(this._bg3X)
-
     if (this._bg3X <= -this._bg3Width) {
       this._bg3X = 0;
     } else if (this._bg3X > 0) {
@@ -139,6 +203,7 @@ class JungleBackground {
 
   _s(size, scale = 1) {
     return this.SPRITE_SIZE * size * scale;
+
   }
 
 
@@ -210,6 +275,7 @@ function setupGame() {
   // snail = new Snail({ left: sprites.snail_L, right: sprites.snail_R }, ctx, 0, 45)
   jungle = new JungleBackground(sprites, ctx);
 
+  meteor = new Meteor(sprites.meteor, ctx, Constants.CANVAS_WIDTH / 2, 0);
 }
 
 function runGame() {
@@ -220,11 +286,13 @@ function runGame() {
   if (input.isPressed('right')) {
     // dino.move('right');
     jungle.move('left');
+    meteor.move('left');
     dino.turn('right');
     dino.setState(CHARACTER_STATE.MOVING);
   } else if (input.isPressed('left')) {
     // dino.move('left');
     jungle.move('right');
+    meteor.move('right');
     dino.turn('left');
     dino.setState(CHARACTER_STATE.MOVING);
   } else {
@@ -235,6 +303,7 @@ function runGame() {
   if (input.isPressed('run') && dino.isMoving()) {
     // dino.move(dino.getDirection()); // twice as fast, because we are calling move twice before dino.draw()
     jungle.move(jungle.getDirection());
+    meteor.move(meteor.getDirection());
     dino.setState(CHARACTER_STATE.RUNNING);
   }
 
@@ -247,10 +316,16 @@ function runGame() {
 
   // update events
   jungle.update();
+  meteor.update();
 
   // drawing part  
   jungle.draw();
   dino.draw();
+  meteor.draw();
+
+  if (meteor.isDestroyed()) {
+    meteor = new Meteor(sprites.meteor, ctx, Constants.CANVAS_WIDTH / 2, 0);
+  }
 
   // next game frame (recursive)
   requestAnimationFrame(runGame);
