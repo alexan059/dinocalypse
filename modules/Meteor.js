@@ -1,4 +1,5 @@
 import Constants from "./Constants.js";
+import {drawBoundingBox} from './Debug.js'
 
 class Meteor {
   constructor(sprites, ctx, x = 0, y = 0, dir = 'right') {
@@ -11,9 +12,11 @@ class Meteor {
     this._dir = dir;
 
     this.VELOCITY = 2;
-    
+
     this.SPRITE_SIZE = 48;
     this.SPRITE_SCALE = 2;
+
+    this.BOUNDING_OFFSET = 0.4;
 
     this.ACCELERATION = 0.5;
   }
@@ -37,7 +40,6 @@ class Meteor {
   }
 
   isDestroyed() {
-    console.log(this._x)
     return this._x < - this.SPRITE_SIZE * this.SPRITE_SCALE;
   }
 
@@ -63,6 +65,31 @@ class Meteor {
       // Sprite size + scale
       this.SPRITE_SCALE * this.SPRITE_SIZE,
       this.SPRITE_SCALE * this.SPRITE_SIZE);
+  }
+
+  isCollision([subjectLeftX, subjectRightX, subjectTopY, subjectBottomY]) {
+    const [meteorLeftX, meteorRightX, meteorTopY, meteorBottomY] = this.getBounding();
+
+    if (
+      meteorLeftX < subjectRightX && 
+      meteorRightX > subjectLeftX && 
+      meteorTopY < subjectBottomY &&
+      meteorBottomY > subjectTopY) {
+      return true;
+    }
+
+    return false;
+  }
+
+  getBounding() {
+    const ratio = ((this.SPRITE_SCALE * this.SPRITE_SIZE) / 2) * (1 - this.BOUNDING_OFFSET);
+
+    const leftX = this._x + ratio;
+    const rightX = leftX + this.SPRITE_SCALE * this.SPRITE_SIZE - ratio;
+    const topY = this._y + ratio;
+    const bottomY = topY + this.SPRITE_SCALE * this.SPRITE_SIZE - ratio;
+
+    return [leftX, rightX, topY, bottomY];
   }
 }
 

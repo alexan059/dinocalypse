@@ -4,6 +4,7 @@ import input from "./modules/Input.js";
 import GameSubject from './modules/GameSubject.js';
 import Meteor from './modules/Meteor.js';
 import JungleBackground from './modules/JungleBackground.js';
+import { drawBoundingBox } from "./modules/Debug.js";
 
 const canvas = document.getElementById('myCanvas');
 const ctx = canvas.getContext('2d');
@@ -39,7 +40,9 @@ class Dino extends GameSubject {
     this.SPRITE_SIZE = 24;
     this.SPRITE_SCALE = 3;
 
-    this.JUMP_MAX_HEIGHT = 70;
+    this.JUMP_MAX_HEIGHT = 140;
+
+    this.BOUNDING_OFFSET = 0.4;
 
     this.addAnimation(CHARACTER_STATE.IDLE, 0, 3);
     this.addAnimation(CHARACTER_STATE.MOVING, 3, 5);
@@ -49,6 +52,22 @@ class Dino extends GameSubject {
 
   isMoving() {
     return this._state === CHARACTER_STATE.MOVING;
+  }
+
+  draw() {
+    super.draw();
+    drawBoundingBox(this._ctx, this._x, Constants.CANVAS_HEIGHT - this.SPRITE_SCALE * this.SPRITE_SIZE - this._y - this._jumpY, this.SPRITE_SCALE * this.SPRITE_SIZE, this.SPRITE_SCALE * this.SPRITE_SIZE, 'blue', 0.6);
+  }
+
+  getBounding() {
+    const ratio = ((this.SPRITE_SCALE * this.SPRITE_SIZE) / 2) * (1 - this.BOUNDING_OFFSET);
+
+    const leftX = this._x + ratio;
+    const rightX = leftX + this.SPRITE_SCALE * this.SPRITE_SIZE - ratio;
+    const topY = Constants.CANVAS_HEIGHT - this.SPRITE_SCALE * this.SPRITE_SIZE - this._y - this._jumpY + ratio;
+    const bottomY = topY + this.SPRITE_SCALE * this.SPRITE_SIZE - ratio;
+
+    return [leftX, rightX, topY, bottomY];
   }
 }
 
@@ -61,17 +80,6 @@ let jungle;
 
 // 4. Game Loop
 
-// DONE use dino sprite
-// DONE make animated sprite
-// DONE make animation states
-// DONE add moving background
-// TODO refactor movement/backgrounds
-// TODO add obstacles
-// TODO collision detection
-// TODO add score
-// TODO add start screen
-// TODO add game over screen
-
 (async () => {
 
   sprites = await imageLoader(assets);
@@ -82,6 +90,16 @@ let jungle;
 
 })();
 
+function createMeteor() {
+  const meteor = new Meteor(sprites.meteor, ctx, Constants.CANVAS_WIDTH / 2, -150);
+
+  meteor.draw = function() {
+    Meteor.prototype.draw.call(this);
+    drawBoundingBox(this._ctx, this._x, this._y, this.SPRITE_SCALE * this.SPRITE_SIZE, this.SPRITE_SCALE * this.SPRITE_SIZE, 'red', 0.6);
+  }
+
+  return meteor;
+}
 
 function setupGame() {
 
@@ -89,7 +107,7 @@ function setupGame() {
   // snail = new Snail({ left: sprites.snail_L, right: sprites.snail_R }, ctx, 0, 45)
   jungle = new JungleBackground(sprites, ctx);
 
-  meteor = new Meteor(sprites.meteor, ctx, Constants.CANVAS_WIDTH / 2, -150);
+  meteor = createMeteor();
 }
 
 function runGame() {
@@ -124,6 +142,8 @@ function runGame() {
   if (dino.isJumping()) { // already jumping
     dino.jump();
     dino.setState(CHARACTER_STATE.JUMPING);
+    jungle.move(jungle.getDirection());
+    meteor.move(meteor.getDirection());
   } else if (input.isPressed('jump')) { // jump starts here
     dino.jump();
   }
@@ -137,8 +157,15 @@ function runGame() {
   dino.draw();
   meteor.draw();
 
+  if (meteor.isCollision(dino.getBounding())) {
+      ctx.fillStyle = 'blue';
+      ctx.font = '96px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('GAME OVER', Constants.CANVAS_WIDTH / 2, Constants.CANVAS_HEIGHT / 2)
+  }
+
   if (meteor.isDestroyed()) {
-    meteor = new Meteor(sprites.meteor, ctx, Constants.CANVAS_WIDTH / 2, -150);
+    meteor = createMeteor();
   }
 
   // next game frame (recursive)

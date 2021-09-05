@@ -2,6 +2,17 @@
 
 Work in Progress 🚧
 
+- [x] use dino sprite
+- [x] make animated sprite
+- [x] make animation states
+- [x] add moving background
+- [x] refactor movement/backgrounds
+- [x] add obstacles
+- [x] collision detection
+- [ ] add score
+- [ ] add start screen
+- [ ] add game over screen
+
 ## Game Storyboard
 
 A lonely Dino in a jungle is running away from metor ball.
