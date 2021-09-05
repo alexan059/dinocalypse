@@ -10,3 +10,5 @@ meteor ball will catch and kill him.
 
 The dino can find items on the way to make him faster
 for a short period of time or jump higher.
+
+https://www.youtube.com/watch?v=J8MH-k0Fa6Y
